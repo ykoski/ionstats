@@ -28,9 +28,6 @@ def check_output_paths(out_path, data_types, step = 'collect'):
     elif step == 'streme':
         mid_dir = 'streme_outs'
     make_sure_path_exists(os.path.join(out_path, mid_dir))
-    for dt in data_types:
-        new_path = os.path.join(out_path, mid_dir, dt)
-        make_sure_path_exists(new_path)
     pass
 
 
@@ -81,7 +78,7 @@ def run_ionstats(args):
                 collector = IonStatsCollector(bam_path = bam_path,
                                               sample_id = si,
                                               ref_path = ref_path,
-                                              out_path = os.path.join(out_path, 'values', dt),
+                                              out_path = os.path.join(out_path, 'values'),
                                               run_id = run_id,
                                               data_type = dt,
                                               strand = config["strand"],
@@ -98,9 +95,9 @@ def run_ionstats(args):
     check_output_paths(out_path, data_types, step = 'kmers')
     if 'test' in analyses:
         for dt in data_types:
-            tester = IonStatsTester(data_path = os.path.join(out_path, 'values', dt),
-                                    test_out_path = os.path.join(out_path, 'tests', dt),
-                                    kmer_out_path = os.path.join(out_path, 'significant_kmers', dt),
+            tester = IonStatsTester(data_path = os.path.join(out_path, 'values'),
+                                    test_out_path = os.path.join(out_path, 'tests'),
+                                    kmer_out_path = os.path.join(out_path, 'significant_kmers'),
                                     data_type = dt,
                                     run_id = run_id,
                                     control_id = control_id,
@@ -117,17 +114,18 @@ def run_ionstats(args):
             tester.compare_samples()
     check_output_paths(out_path, data_types, step = 'streme')
     if 'motif_discovery' in analyses:
-        for tt in tests.split(","):
-            for dt in data_types:
+        for dt in data_types:
+            for tt in tests.split(","):
                 motif_discovery = IonStatsMotifDiscovery(run_id=run_id,
-                                                        sequence_dir=os.path.join(out_path, 'significant_kmers', dt),
-                                                        out_dir=os.path.join(out_path, 'streme_outs', dt),
-                                                        alphabet=config["alphabet"],
-                                                        test_type = tt,
-                                                        k =config["k"],
-                                                        overwrite=config["overwrite"],
-                                                        verb = config["verb"])
-            motif_discovery.motif_discovery()
+                                                         data_type=dt,
+                                                         test_type=tt,
+                                                         sequence_dir=os.path.join(out_path, 'significant_kmers'),
+                                                         out_dir=os.path.join(out_path, 'streme_outs'),
+                                                         alphabet=config["alphabet"],
+                                                         k = config["k"],
+                                                         overwrite=config["overwrite"],
+                                                         verb = config["verb"])
+                motif_discovery.motif_discovery()
     return
 
 

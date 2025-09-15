@@ -23,3 +23,4 @@ conversion_vals:
  - 0.00015259021896696422
 # Motif discovery arguments
 alphabet: "/csc/epitkane/projects/ionstats/custom_alphabet.txt"
+overwrite: True

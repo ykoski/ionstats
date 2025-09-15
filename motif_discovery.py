@@ -5,14 +5,16 @@ class IonStatsMotifDiscovery():
 
     def __init__(self,
                  run_id,
+                 data_type,
+                 test_type,
                  sequence_dir,
                  out_dir,
                  alphabet,
-                 test_type = None,
                  k = 9,
                  overwrite = True,
                  verb = True):
         self.run_id = run_id
+        self.data_type = data_type
         self.sequence_dir = sequence_dir
         self.out_dir = out_dir
         self.alphabet = alphabet
@@ -29,8 +31,8 @@ class IonStatsMotifDiscovery():
         
     def motif_discovery(self):
         command = ["streme"]
-        sample_path = get_file_path(self.run_id, self.sequence_dir)
-        print(sample_path, self.run_id, self.sequence_dir)
+        sample_path = get_file_path("_".join([self.run_id, self.data_type, self.test_type]), self.sequence_dir)
+        print(sample_path, self.run_id, self.sequence_dir, self.test_type)
         command.extend(["--p", sample_path])
         out_id = self.run_id
         if self.test_type is not None:
