@@ -1,0 +1,25 @@
+analyses:
+ - preprocess
+ - collect
+ - test
+ - motif_discovery
+# Collector arguments
+strand: both
+k: 9
+ref_name: null
+n_vals: 65536
+n_threads: 1
+uc4_table_path: "/csc/epitkane/home/ykoski/dna_r10.4.1_400bps_9mer.npz"
+n_bins: null
+save_every: null
+verb: True
+# Tester arguments
+input_type: dict
+jitter: False
+js: 0.01
+n_splits: 1
+conversion_vals:
+ - -5
+ - 0.00015259021896696422
+# Motif discovery arguments
+alphabet: "/csc/epitkane/projects/ionstats/custom_alphabet.txt"
