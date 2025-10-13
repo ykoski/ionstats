@@ -1,20 +1,21 @@
 analyses:
  - preprocess
+ - read_level_values
  - collect
  - test
  - motif_discovery
-run_id: IonStats_run
+run_id: example_run
 tests:
  - ks
  - cvm
 # Data arguments
-control: null
-treatment: null
-bam_path: null
-read_path: null
-summary_path: null
-out_path: null
-ref_path: null
+control: control
+treatment: aa
+bam_path: example/bam/
+read_path: example/pod5/
+summary_path: example/sequencing_summary.txt
+out_path: example_output/
+ref_path: example/CEN.PK113-7D_Delft_2012_AEHG00000000.fasta
 data_types:
  - qs
  - sig_mean
@@ -40,8 +41,8 @@ conversion_vals:
  - 0.00015259021896696422
 # Motif discovery arguments
 alphabet: "resources/custom_alphabet.txt"
-control_sequence_path : null
 overwrite: True
+control_sequence_path: "example/example_9mers.fasta"
 # Summary reader arguments
 extract_columns:
  - 'mean_qscore_template'
