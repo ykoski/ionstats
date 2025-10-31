@@ -25,7 +25,7 @@ def check_output_paths(out_path, step = 'collect'):
     make_sure_path_exists(os.path.join(out_path, "signal_alignment"))
     if step == 'collect':
         mid_dir = 'values'
-    if step == 'summary':
+    elif step == 'summary':
         mid_dir = 'read_level_values'
     elif step == 'test':
         mid_dir = 'tests'
