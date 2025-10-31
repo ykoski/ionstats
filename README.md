@@ -15,7 +15,7 @@ You can install IonStats by first cloning into the GitHub repository, then setti
     cd ionstats
     conda env create -f conda_env.yaml
     conda activate ionstats_env
-    pip install -e .<\code>
+    pip install -e .
 
 You can verify that the installation was successful by running:
 
