@@ -33,7 +33,7 @@ class IonStatsKmerStats():
         self.conversion_vals = conversion_vals
         self.verb = verb
         if self.verb:
-            print(f"Set up k-mer stats for samples {self.sample_id} and for data type {self.data_type}.")
+            print(f"Set up k-mer stats for samples {self.sample_ids} and for data type {self.data_type}.")
 
 
     def load_distribution(self, ids, kmer_set):
