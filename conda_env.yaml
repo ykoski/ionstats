@@ -1,0 +1,11 @@
+dependencies:
+ - python >= 3.8
+ - numpy
+ - pandas
+ - scipy
+ - pysam
+ - pip
+ - meme >= 5.4.1
+ - pip:
+      - uncalled4
+      - PyYAML

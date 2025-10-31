@@ -8,6 +8,7 @@ from test import IonStatsTester
 from motifs import IonStatsMotifDiscovery
 from interruptions import IonStatsReadInterruptions
 from summary_reader import IonStatsSummaryReader
+from kmer_stats import IonStatsKmerStats
 from helpers import *
 
 
@@ -34,6 +35,8 @@ def check_output_paths(out_path, step = 'collect'):
         mid_dir = 'streme_outs'
     elif step == 'interruptions':
         mid_dir = 'interrupted_reads'
+    elif step == 'stats':
+        mid_dir = 'kmer_stats'
     else:
         return
     make_sure_path_exists(os.path.join(out_path, mid_dir))
@@ -144,6 +147,23 @@ def run_ionstats(args):
                                     conversion_vals = args.conversion_vals,
                                     verb = args.verb)
             tester.compare_samples()
+    if 'stats' in analyses:
+        check_output_paths(out_path, step = 'stats')
+        for si in sample_ids:
+            for dt in data_types:
+                kmer_stats = IonStatsKmerStats(data_path = os.path.join(out_path, 'values'),
+                                               stat_out_path = os.path.join(out_path, 'kmer_stats'),
+                                               data_type = dt,
+                                               run_id = run_id,
+                                               sample_id = si,
+                                               k = args.k,
+                                               input_type = args.input_type,
+                                               strand = args.strand,
+                                               quantiles = args.quantiles,
+                                               conversion_vals = args.conversion_vals,
+                                               n_splits = args.n_splits,
+                                               verb = args.verb)
+                kmer_stats.collect_values_and_stats()
     if 'motif_discovery' in analyses:
         check_output_paths(out_path, step = 'streme')
         for dt in data_types:
@@ -187,7 +207,7 @@ def add_args_from_config(parser, config, prefix = ""):
             elif arg_type == 'list':
                 el_type = type(val[0]) if val else str
                 parser.add_argument(arg_flag, type = el_type, nargs = '+',
-                                    default = val, help = f"List of {el_type.__name__} (defailt: {val})")
+                                    default = val, help = f"List of {el_type.__name__} (default: {val})")
             else:
                 parser.add_argument(arg_flag, type = arg_type, default = val,
                                     help = f"Default: {val}")
@@ -214,22 +234,7 @@ def main():
     # Next, parse args from command line
     args = parse_args(config_args.config)
     print(vars(args))
-
     run_ionstats(args)
-    """
-    parser.add_argument("--control", action="store", type=str, required=True)
-    parser.add_argument("--treatment", action="store", type=str, required=True)
-    parser.add_argument("--bam_path", action="store", type=str, required=True)
-    parser.add_argument("--read_path", action="store", type=str, required=True)
-    parser.add_argument("--summary_path", action="store", type=str, required=True)
-    parser.add_argument("--out_path", action="store", type=str, required=True)
-    parser.add_argument("--ref_path", action="store", type=str, required=True)
-    parser.add_argument("--run_id", action="store", type=str, required=True)
-    parser.add_argument("--tests", action="store", type=str, default="ks,cvm")
-    parser.add_argument("-c", "--config", action="store", type=str, default="default_config.yaml")
-    parser.add_argument("--data_types", action="store", type=str, default="qs,sig_mean,sig_std,sig_dt")
-    args = parser.parse_args()
-    """
 
 
 if __name__ == "__main__":

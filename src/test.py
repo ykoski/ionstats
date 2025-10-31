@@ -68,7 +68,8 @@ class IonStatsTester():
 
 
     def load_distribution(self, ids, kmer_set):
-        files = self.get_matching_files(ids)
+        #files = self.get_matching_files(ids)
+        files = get_matching_files(self.data_path, self.strand, self.data_type, ids)
         print(files)
         data = None
         for f in files:

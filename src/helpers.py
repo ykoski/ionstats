@@ -152,6 +152,21 @@ def make_sure_path_exists(path):
             raise
 
 
+def get_matching_files(data_path, strand, data_type, ids):
+    matching_files = []
+    all_files = os.listdir(data_path)
+    for id in ids:
+        for f in all_files:
+            full_path = os.path.join(data_path, f)
+            if strand != 'both':
+                if id in f and strand in f and data_type in f:
+                    matching_files.append(full_path)
+            else:
+                if id in f and data_type in f:
+                    matching_files.append(full_path)
+    return matching_files
+
+
 def get_file_path(id, bpath):
     for root, dirs, files in os.walk(bpath):
         for f in files:

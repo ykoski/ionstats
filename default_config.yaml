@@ -1,6 +1,8 @@
 analyses:
  - preprocess
+ - read_level_values
  - collect
+ - stats
  - test
  - motif_discovery
 run_id: IonStats_run
@@ -38,6 +40,8 @@ n_splits: 1
 conversion_vals:
  - -5
  - 0.00015259021896696422
+# Stat df arguments:
+quantiles: True 
 # Motif discovery arguments
 alphabet: "resources/custom_alphabet.txt"
 control_sequence_path : null
