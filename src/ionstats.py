@@ -216,7 +216,8 @@ def add_args_from_config(parser, config, prefix = ""):
 def parse_args(config_path = None):
     config = load_config(config_path)
 
-    parser = argparse.ArgumentParser(description = "Dynamic config-based CLI")
+    parser = argparse.ArgumentParser(description = "IonStats for analysing and comparing nanopore sequencing data." 
+                                     "Check README.md for more detailed help message.")
     parser.add_argument("--config", type = str, help = "YAML config file")
 
     add_args_from_config(parser, config)

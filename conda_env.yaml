@@ -10,6 +10,7 @@ dependencies:
  - scipy=1.11.*
  - pysam=0.23*
  - meme=5.5.8
+ - statsmodels=0.14.*
  - pip
  - pip:
       - uncalled4

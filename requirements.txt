@@ -4,3 +4,4 @@ numpy
 PyYAML
 scipy
 pysam
+statmodels
