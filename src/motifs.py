@@ -1,4 +1,5 @@
 import subprocess as sp
+import shutil
 from helpers import *
 
 class IonStatsMotifDiscovery():
@@ -34,6 +35,9 @@ class IonStatsMotifDiscovery():
         
         
     def motif_discovery(self):
+        status = self.check_streme_install()
+        if not status:
+            return
         command = ["streme"]
         sample_path = get_file_path("_".join([self.run_id, self.data_type, self.test_type]), self.sequence_dir)
         print(sample_path, self.run_id, self.sequence_dir, self.test_type)
@@ -52,3 +56,14 @@ class IonStatsMotifDiscovery():
         if self.verb:
             print(f"Running STREME with command {command}.")
         sp.run(command)
+
+
+    def check_streme_install(self):
+        if shutil.which("streme") is None:
+            print(f"ERROR: STREME (from MEME suite) is not installed."
+                  "Please install MEME Suite (https://meme-suite.org) "
+                  "and ensure that the 'STREME' binary is in your PATH")
+            print(f"Exiting without running motif discovery.")
+            return False
+        else:
+            return True

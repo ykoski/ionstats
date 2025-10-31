@@ -1,11 +1,16 @@
+name: ionstats_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
 dependencies:
- - python >= 3.8
- - numpy
- - pandas
- - scipy
- - pysam
+ - python=3.9
+ - numpy=1.25.*
+ - pandas=2.1*
+ - scipy=1.11.*
+ - pysam=0.23*
+ - meme=5.5.8
  - pip
- - meme >= 5.4.1
  - pip:
       - uncalled4
       - PyYAML

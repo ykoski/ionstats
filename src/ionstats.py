@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from preprocess import IonStatsPreprocess
 from collect import IonStatsCollector
-from test import IonStatsTester
+from tester import IonStatsTester
 from motifs import IonStatsMotifDiscovery
 from interruptions import IonStatsReadInterruptions
 from summary_reader import IonStatsSummaryReader
