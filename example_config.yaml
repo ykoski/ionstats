@@ -5,6 +5,7 @@ analyses:
  - stats
  - test
  - motif_discovery
+ - interruptions
 run_id: example_run
 tests:
  - ks
@@ -40,6 +41,7 @@ n_splits: 1
 conversion_vals:
  - -5
  - 0.00015259021896696422
+fdr_alpha : 0.05
 # Stat df arguments:
 quantiles: True 
 # Motif discovery arguments

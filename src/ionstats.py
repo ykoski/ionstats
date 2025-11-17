@@ -145,6 +145,7 @@ def run_ionstats(args):
                                     js = args.js,
                                     n_splits = args.n_splits,
                                     conversion_vals = args.conversion_vals,
+                                    alpha = args.fdr_alpha,
                                     verb = args.verb)
             tester.compare_samples()
     if 'stats' in analyses:
