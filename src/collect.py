@@ -71,14 +71,14 @@ class IonStatsCollector():
         if self.binning:
             n_vals = self.n_bins
             if not self.use_refpos:
-                return np.zeros((self.k**4, n_vals))
+                return np.zeros((self.k**4, n_vals), dtype=np.uint32)
         else:
             n_vals = self.n_vals
         if not self.use_refpos:
             return {}
         else:
             reflen = self.len_dict[self.ref_name]
-            return np.zeros((reflen, n_vals))
+            return np.zeros((reflen, n_vals), dtype=np.uint32)
 
 
     def get_read_values(self, read, read_mapping):
@@ -103,7 +103,10 @@ class IonStatsCollector():
             qs_sequence = self.reference.fetch(refname, qs_seq_start, qs_seq_end)
             qs_kmers = get_kmers(qs_sequence, 9)
             qs = qs[start_pad:len(qs)-end_pad]
-            values, read_mapping = self.get_matched_quality_scores(pairs, qs, qs_kmers, qs_seq_start)
+            if self.use_refpos:
+                values, read_mapping = self.get_matched_quality_scores(pairs, qs, read_mapping, qs_seq_start)
+            else:
+                values, read_mapping = self.get_matched_quality_scores(pairs, qs, qs_kmers, qs_seq_start)
         elif self.data_type == "sig_mean" or self.data_type == 'AEAD_mean':
             values = np.array(read.get_tag('uc'), dtype = int)
         elif self.data_type == 'sig_std' or self.data_type == 'AEAD_std':
@@ -207,8 +210,6 @@ class IonStatsCollector():
                         add_to_dict(data, read_mapping[i], values[i])
             else:
                 for i in range(len(values)):
-                    print(len(read_mapping), read_mapping[0])
-                    print(len(values), values[0])
                     data[read_mapping[i], values[i]] += 1
             n_reads += 1
             if self.save_every is not None:
