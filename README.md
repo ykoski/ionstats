@@ -55,7 +55,7 @@ Other general arguments to consider:
 - `run_id`: An identifier of the IonStats run, used in the output file names (default: IonStats_run).
 - `data_types`: List of which data types to collect and compare, by default using qs, sig_mean, sig_std, and sig_dt. Other options include AEAD_mean, AEAD_std, and sig_shifted_dt.
 - `k`: K-mer length. IonStats is designed and tested on k = 9, but if the user wants to group the collected values and test values by shorter or longer k-mer context, it is possible with this argument.
-- `ref_name`: Contig name, where to focus the analysis. If this argument is specified, the collected values are grouped by reference position instead of k-mer context. Only reads that are aligned to this contig are considered. Useful for short and simple reference genomes, such as plasmids. **NOTE: There is a bug with this approach, so it does not work at the moment! This is under development and should be fixed soon.**
+- `ref_name`: Contig name, where to focus the analysis. If this argument is specified, the collected values are grouped by reference position instead of k-mer context. Only reads that are aligned to this contig are considered. Useful for short and simple reference genomes, such as plasmids. This mode only works `input_type` is set to array.
 - `n_bins`: Specifying a value for `n_bins` changes the way that data is collected and tested. Instead of storing the values observed for each k-mer in a dictionary, they are instead stored as a count matrix, where the continuous data is binned into `n_bins`. This feature has not been tested, but it should reduce computational costs while sacrificing some precision.
 
 ### `preprocess`
