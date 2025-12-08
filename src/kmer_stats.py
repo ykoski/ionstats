@@ -78,12 +78,14 @@ class IonStatsKmerStats():
             elif self.input_type == 'array':
                 a = np.array(data[i])
                 values = counts_to_array(a, self.conversion_vals)
+            if len(values) <= 1:
+                continue
             means.append(np.mean(values))
             stds.append(np.std(values))
             medians.append(np.median(values))
             if self.quantiles:
                 if len(values) < 100:
-                    print(f"Warning! Less than 100 observations for kmer: {i} in {self.sample_id}." 
+                    print(f"Warning! Less than 100 observations for kmer: {i} in {self.sample_ids}." 
                           "You should be careful when interpreting the quantile values.")
                 q1 = np.quantile(values, (0.01,0.99))
                 q5 = np.quantile(values, (0.05,0.95))
@@ -132,7 +134,7 @@ class IonStatsKmerStats():
                     kmers = kmer_set[split_size*split:split_size*(split+1)]
                 else:
                     kmers = None
-                data = self.load_distribution(sid, kmers)
+                data = self.load_distribution([sid], kmers)
                 # Compute stats from data
                 new_df = self.compute_stat_df(data)
                 if split >= 1:

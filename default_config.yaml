@@ -23,6 +23,9 @@ data_types:
  - sig_mean
  - sig_std
  - sig_dt
+ - sig_shifted_dt
+ - AEAD_mean
+ - AEAD_std
 # Collector arguments
 strand: both
 k: 9
@@ -39,8 +42,21 @@ jitter: False
 js: 0.01
 n_splits: 1
 conversion_vals:
- - -5
- - 0.00015259021896696422
+  sig_mean:
+    - -5
+    - 0.00015259021896696422
+  sig_std:
+    - -5
+    - 0.00015259021896696422
+  sig_dt:
+    - 0
+    - 1
+  sig_shifted_dt:
+    - 0
+    - 1
+  qs:
+    - 0
+    - 1
 fdr_alpha : 0.05
 # Stat df arguments:
 quantiles: True 

@@ -130,6 +130,14 @@ def run_ionstats(args):
         check_output_paths(out_path, step = 'test')
         check_output_paths(out_path, step = 'kmers')
         for dt in data_types:
+            try:
+                cv = getattr(args, f"conversion_vals.{dt}")
+            except AttributeError:
+                cv = None
+            if dt in ['AEAD_mean', 'AEAD_std']:
+                it = 'dict'
+            else:
+                it = args.input_type
             tester = IonStatsTester(data_path = os.path.join(out_path, 'values'),
                                     test_out_path = os.path.join(out_path, 'tests'),
                                     kmer_out_path = os.path.join(out_path, 'significant_kmers'),
@@ -138,13 +146,15 @@ def run_ionstats(args):
                                     control_id = control_id,
                                     treated_id = treated_id,
                                     test_type = tests,
-                                    input_type = args.input_type,
+                                    ref_path = ref_path,
+                                    ref_name = args.ref_name,
+                                    input_type = it,
                                     strand = args.strand,
                                     k = args.k,
                                     jitter = args.jitter,
                                     js = args.js,
                                     n_splits = args.n_splits,
-                                    conversion_vals = args.conversion_vals,
+                                    conversion_vals = cv,
                                     alpha = args.fdr_alpha,
                                     verb = args.verb)
             tester.compare_samples()
@@ -152,16 +162,24 @@ def run_ionstats(args):
         check_output_paths(out_path, step = 'stats')
         for si in sample_ids:
             for dt in data_types:
+                try:
+                    cv = getattr(args, f"conversion_vals.{dt}")
+                except AttributeError:
+                    cv = None
+                if dt in ['AEAD_mean', 'AEAD_std']:
+                    it = 'dict'
+                else:
+                    it = args.input_type
                 kmer_stats = IonStatsKmerStats(data_path = os.path.join(out_path, 'values'),
                                                stat_out_path = os.path.join(out_path, 'kmer_stats'),
                                                data_type = dt,
                                                run_id = run_id,
                                                sample_id = si,
                                                k = args.k,
-                                               input_type = args.input_type,
+                                               input_type = it,
                                                strand = args.strand,
                                                quantiles = args.quantiles,
-                                               conversion_vals = args.conversion_vals,
+                                               conversion_vals = cv,
                                                n_splits = args.n_splits,
                                                verb = args.verb)
                 kmer_stats.collect_values_and_stats()

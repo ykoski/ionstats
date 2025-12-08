@@ -74,7 +74,7 @@ class IonStatsCollector():
                 return np.zeros((self.k**4, n_vals), dtype=np.uint32)
         else:
             n_vals = self.n_vals
-        if not self.use_refpos:
+        if not self.use_refpos or self.data_type in ['AEAD_mean', 'AEAD_std']:
             return {}
         else:
             reflen = self.len_dict[self.ref_name]
@@ -121,14 +121,17 @@ class IonStatsCollector():
             print("Unknown data_type passed. Exiting...")
             exit()
         values = self.kmer_idx_to_amps(values)
-        if self.data_type == 'AEAD_mean':
-            exp_means, _ = get_expected_values_for_read(read_mapping, self.uc4_means)
-            mean_diffs = np.abs(exp_means - values)
-            values = compute_AEAD_values(mean_diffs, k = self.k)
-        elif self.data_type == 'AEAD_std':
-            _, exp_stds = get_expected_values_for_read(read_mapping, self.uc4_stds)
-            std_diffs = np.abs(exp_stds - values)
-            values = compute_AEAD_values(std_diffs, k = self.k)
+        if self.data_type == 'AEAD_mean' or self.data_type == 'AEAD_std':
+            if self.use_refpos:
+                ref_kmers = self.get_kmers_or_refpos(read, force_kmers=True)
+            else:
+                ref_kmers = read_mapping
+            if self.data_type == 'AEAD_mean':
+                exp = get_expected_values_for_read(ref_kmers, self.uc4_means)
+            else:
+                exp = get_expected_values_for_read(ref_kmers, self.uc4_stds)
+            diffs = np.abs(exp - values)
+            values = compute_AEAD_values(diffs, k = self.k)
         return values, read_mapping
 
 
@@ -145,11 +148,11 @@ class IonStatsCollector():
         return values, out_kmers
 
 
-    def get_kmers_or_refpos(self, read):
+    def get_kmers_or_refpos(self, read, force_kmers = False):
         ur = read.get_tag('ur')
         rev = read.is_reverse
         refname = self.alignment.get_reference_name(read.reference_id)
-        if not self.use_refpos:
+        if not self.use_refpos or force_kmers:
             sequence = self.reference.fetch(refname, ur[0], ur[1])
             if rev:
                 sequence = reverse_complement(sequence)
@@ -198,7 +201,7 @@ class IonStatsCollector():
             values, read_mapping = self.get_read_values(read, read_mapping)
             # NOTE: for AEAD values, the array will be length len(read_mapping) - 8
             if self.data_type == 'AEAD_mean' or self.data_type == 'AEAD_std':
-                read_mapping = read_mapping[self.h:len(read_mapping)-self.h+1]
+                read_mapping = read_mapping[self.h:len(read_mapping)-self.h]
             assert len(read_mapping) == len(values), f"Mapping should be the same length as values {len(read_mapping)} != {len(values)}"
             if not self.use_refpos:
                 if self.binning:
@@ -209,8 +212,12 @@ class IonStatsCollector():
                     for i in range(len(values)):
                         add_to_dict(data, read_mapping[i], values[i])
             else:
-                for i in range(len(values)):
-                    data[read_mapping[i], values[i]] += 1
+                if self.data_type in ['AEAD_mean', 'AEAD_std']:
+                    for i in range(len(values)):
+                        add_to_dict(data, read_mapping[i], values[i])
+                else:
+                    for i in range(len(values)):
+                        data[read_mapping[i], values[i]] += 1
             n_reads += 1
             if self.save_every is not None:
                 if n_reads % self.save_every == 0:
@@ -229,7 +236,7 @@ class IonStatsCollector():
         if file_idx is not None:
             path_list.append(str(file_idx))
         fname = os.path.join(self.out_path, "_".join(path_list))
-        if self.use_refpos or self.binning:
+        if (self.use_refpos or self.binning) and (self.data_type not in ['AEAD_mean', 'AEAD_std']):
             fname += ".npy"
             np.save(fname, data)
         else:

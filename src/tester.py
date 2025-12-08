@@ -20,6 +20,8 @@ class IonStatsTester():
                  control_id,
                  treated_id,
                  test_type,
+                 ref_path,
+                 ref_name,
                  input_type = 'dict',
                  strand = 'both',
                  k = 9,
@@ -43,6 +45,12 @@ class IonStatsTester():
         self.js = js
         self.alpha = alpha
         self.n_splits = n_splits
+        self.ref_path = ref_path
+        self.ref_name = ref_name
+        if self.ref_name is not None:
+            self.use_refpos = True
+        else:
+            self.use_refpos = False
         if self.input_type == 'array':
             self.n_splits = 1
         self.k = k
@@ -70,7 +78,6 @@ class IonStatsTester():
     def load_distribution(self, ids, kmer_set):
         #files = self.get_matching_files(ids)
         files = get_matching_files(self.data_path, self.strand, self.data_type, ids)
-        print(files)
         data = None
         for f in files:
             if f.endswith('.npy'):
@@ -93,15 +100,19 @@ class IonStatsTester():
         return data
 
 
-    def test_samples(self, control_data, treated_data, test_type):
+    def test_samples(self, control_data, treated_data, test_type, ref_kmers = None):
         if self.input_type == 'dict':
             keys = list(control_data.keys() & treated_data.keys())
             n_values = len(keys)
-            id_col = 'kmer'
+            if self.use_refpos:
+                id_col = 'refpos'
+            else:
+                id_col = 'kmer'
         elif self.input_type == 'array':
             n_values = control_data.shape[0]
             id_col = 'refpos'
-        test_values, p_values, ids = [], [], []
+        ref_kmer = None
+        test_values, p_values, ids, ref_kmer_list = [], [], [], []
         for i in range(n_values):
             if self.input_type == 'dict':
                 key = keys[i]
@@ -111,6 +122,8 @@ class IonStatsTester():
             elif self.input_type == 'array':
                 c_arr = counts_to_array(control_data[i], self.conversion_vals)
                 t_arr = counts_to_array(treated_data[i], self.conversion_vals)
+            if self.use_refpos:
+                ref_kmer = ref_kmers[i]
                 id = i
             if self.jitter:
                 t_arr = t_arr.astype(float) + np.random.uniform(-self.js, self.js, size=t_arr.shape)
@@ -124,9 +137,13 @@ class IonStatsTester():
             test_values.append(stat.statistic)
             p_values.append(stat.pvalue)
             ids.append(id)
+            if ref_kmer is not None:
+                ref_kmer_list.append(ref_kmer)
         df = pd.DataFrame(data = {id_col : ids,
                                   test_type : test_values,
                                   'pvalue' : p_values})
+        if self.use_refpos:
+            df['kmer'] = ref_kmer_list
         df = df.sort_values(by = id_col)
         return df
 
@@ -160,18 +177,18 @@ class IonStatsTester():
                 kmers = None
             control_data = self.load_distribution(self.control_ids, kmers)
             treated_data = self.load_distribution(self.treated_ids, kmers)
+            if self.use_refpos:
+                ref_kmers = get_reference_kmers(self.ref_path, self.ref_name, self.k)
+            else:
+                ref_kmers = None
             for tt in self.test_types:
-                test_df = self.test_samples(control_data, treated_data, tt)
+                test_df = self.test_samples(control_data, treated_data, tt, ref_kmers)
                 if split >= 1:
                     results[tt] = pd.concat(results[tt], test_df)
                 else:
                     results[tt] = test_df
         for test, df in results.items():
             self.save_test_dataframe(df, test)
-            if self.input_type == 'dict':
-                self.write_significant_kmers(df, test)
+            self.write_significant_kmers(df, test)
         if self.verb:
             print(f"Finished testing of {self.control_ids} and {self.treated_ids} using {self.test_types}")
-
-
-                

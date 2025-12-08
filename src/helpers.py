@@ -4,6 +4,7 @@ import itertools
 import errno
 import pathlib
 import yaml
+import pysam
 
 
 CHUNK_SIZE = 1000
@@ -214,3 +215,9 @@ def infer_type(val):
     else:
         return str   
     
+
+def get_reference_kmers(ref_path, ref_name, k):
+    reference = pysam.FastaFile(ref_path)
+    ref_seq = reference.fetch(reference = ref_name)
+    ref_kmers = get_kmers(ref_seq, k, of = False)
+    return ref_kmers
