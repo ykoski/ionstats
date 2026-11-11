@@ -7,13 +7,26 @@ analyses:
  - motif_discovery
  - interruptions
 run_id: example_run
+# 'ad' (k-sample Anderson-Darling, midrank) is deliberately NOT run on the
+# example data, although it is in the default config and is the best behaved
+# test on the discrete data types in a real analysis.
+#
+# scipy clamps the Anderson-Darling p value to [0.001, 0.25], so the strongest
+# k-mers all tie at 0.001. Benjamini-Hochberg can only call that tied group when
+# it makes up at least p_floor / alpha = 0.001 / 0.05 = 2% of the k-mers tested,
+# and reaching the floor at all takes depth. This example has a median of ~169
+# values per 9-mer, where 1.9% of them reach it -- just under the bar, so 'ad'
+# reports ZERO significant k-mers for sig_mean and sig_std while ks and cvm
+# report several hundred on the same data. The 'ad' statistic still ranks k-mers
+# correctly (Spearman 0.98 against cvm); only its p value is degenerate.
+#
+# In a real analysis the fix is the 'called' column, which thresholds the
+# statistic against a control-versus-control decoy instead of the p value. That
+# needs a second control library, which this two-sample example does not have.
+# See calibration_control below, and the README.
 tests:
  - ks
  - cvm
- - ad        # Anderson-Darling (k-sample, midrank). Tie corrected, so unlike cvm it stays
-             # calibrated on the discrete data types (qs, sig_dt), and its statistic is
-             # already standardised for sample size. Note scipy caps its p value, so use
-             # the 'called' column (decoy threshold) rather than 'significant' for ad.
 # Data arguments
 control: control
 treatment: aa
