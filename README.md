@@ -17,44 +17,41 @@ You can install IonStats by first cloning into the GitHub repository, then setti
     cd ionstats
     conda env create -f conda_env.yaml
     conda activate ionstats_env
+    pip install uncalled4
     pip install -e .
+
+`uncalled4` is installed after activating the environment, not from
+`conda_env.yaml`, and the order matters. It is published only as a source
+package -- no wheels for any platform and no conda package -- so pip compiles
+its C++ extension during installation. `conda_env.yaml` therefore includes
+`cxx-compiler`, which puts a toolchain inside the environment: `g++` on Linux,
+`clang++` with the macOS SDK on macOS. That compiler is only on `PATH` once the
+environment is active, which is why `uncalled4` cannot be listed under `pip:`
+in the environment file -- `conda env create` runs its pip step as
+`<env>/bin/python -m pip`, with `<env>/bin` absent from `PATH`, so the build
+looks for a bare `g++`, misses the compiler it has just installed, and fails on
+any machine without a system compiler.
 
 You can verify that the installation was successful by running:
 
     ionstats --help
 
-### If the install fails while building uncalled4
+### Notes on installing uncalled4
 
-`uncalled4` is distributed only as a source package, so pip compiles its C++
-extension during installation. `conda_env.yaml` requests `cxx-compiler`, which
-puts a compiler inside the environment, but `conda env create` runs its pip step
-without activating the environment first, so the compiler's setup is not always
-in effect. If the install stops with
-
-    error: command 'g++' failed: No such file or directory          (Linux)
-    fatal error: 'iostream' file not found                          (macOS)
-
-then install the pip packages as a separate, activated step. The conda packages
-are installed before pip runs, so the environment already exists at this point:
-
-    conda activate ionstats_env
-    pip install uncalled4 PyYAML
-    pip install -e .
-
-On macOS this also needs Apple's command line tools, which provide the SDK that
-holds the C++ standard library headers:
+On macOS the build also needs Apple's command line tools, which provide the SDK
+holding the C++ standard library headers. Without them it stops at
+`fatal error: 'iostream' file not found`:
 
     xcode-select --install          # or: sudo xcode-select --reset
     export SDKROOT=$(xcrun --show-sdk-path)
 
-On a shared system, also set `export PYTHONNOUSERSITE=1` before installing, so
-that packages in `~/.local` cannot shadow the ones in the environment.
+On a shared system, set `export PYTHONNOUSERSITE=1` before installing, so that
+packages in `~/.local` cannot shadow the ones in the environment.
 
-If a compiler cannot be made to work at all, note that IonStats calls
-`uncalled4` as an external command and never imports it. Only the `preprocess`
-step needs it, so the rest of the pipeline can be run without it by removing
-`preprocess` from `analyses` and starting from BAM files that already carry
-uncalled4's `uc` and `ud` tags.
+If no compiler can be made to work, the rest of the pipeline still runs without
+`uncalled4`: IonStats calls it as an external command and never imports it, and
+only the `preprocess` step needs it. Remove `preprocess` from `analyses` and
+start from BAM files that already carry uncalled4's `uc` and `ud` tags.
 
 ## Running IonStats
 
