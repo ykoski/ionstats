@@ -11,6 +11,13 @@ dependencies:
  - pysam=0.23*
  - meme=5.5.8
  - statsmodels=0.14.*
+ # uncalled4 is published only as a source distribution -- there are no wheels
+ # for any platform and no conda package -- so pip compiles its C++ extension
+ # during installation. cxx-compiler supplies a toolchain inside the
+ # environment: g++ on Linux, and clang++ with the macOS SDK on osx-arm64.
+ # Without it the build fails with "command 'g++' failed: No such file or
+ # directory" on Linux, or "'iostream' file not found" on macOS.
+ - cxx-compiler
  - pip
  - pip:
       - uncalled4
