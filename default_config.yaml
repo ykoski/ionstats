@@ -22,14 +22,20 @@ read_path: null
 summary_path: null
 out_path: null
 ref_path: null
+# The five data types of the published pipeline. AEAD_mean and AEAD_std are
+# supported but are not collected by default. The uc4 model table is in
+# uncalled4's own per-read z-score convention, so an AEAD difference has to be
+# taken on that scale and only its result can be rescaled -- it is therefore
+# only partly robust, unlike the types below, which `normalization`
+# re-standardises before anything is computed from them. Add them explicitly if
+# you want them.
 data_types:
- - qs
  - sig_mean
  - sig_std
  - sig_dt
- - sig_shifted_dt
- - AEAD_mean
- - AEAD_std
+ - qs
+ - sig_shifted_dt      # k-mer mode only: dwell regrouped by the sequence at the
+                       # motor protein, `shift` bases downstream of the sensor
 # Collector arguments
 strand: both
 k: 9
@@ -77,6 +83,9 @@ verb: True
 input_type: dict
 jitter: False
 js: 0.01
+# Seeds the jitter RNG so that two runs of the same comparison agree. The tester
+# needs this key even when jitter is off, so do not delete it.
+seed: 42
 n_splits: 1
 conversion_vals:
   sig_mean:

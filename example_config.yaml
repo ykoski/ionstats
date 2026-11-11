@@ -22,14 +22,19 @@ read_path: example/pod5/
 summary_path: example/sequencing_summary.txt
 out_path: example_output/
 ref_path: example/CEN.PK113-7D_Delft_2012_AEHG00000000.fasta
+# The five data types of the published pipeline. AEAD_mean and AEAD_std are
+# available but are not part of it. The uc4 model table is in uncalled4's own
+# per-read z-score convention, so an AEAD difference has to be taken on that
+# scale and only its result can be rescaled -- it is therefore only partly
+# robust, unlike the other types, which `normalization` re-standardises before
+# anything is computed from them.
 data_types:
- - qs
  - sig_mean
  - sig_std
  - sig_dt
- - sig_shifted_dt
- - AEAD_mean
- - AEAD_std
+ - qs
+ - sig_shifted_dt      # k-mer mode only: dwell regrouped by the sequence at the
+                       # motor protein, `shift` bases downstream of the sensor
 # Collector arguments
 strand: both
 k: 9
@@ -68,6 +73,9 @@ verb: True
 input_type: dict
 jitter: False
 js: 0.01
+# Seeds the jitter RNG so that two runs of the same comparison agree. The tester
+# needs this key even when jitter is off, so do not delete it.
+seed: 42
 n_splits: 1
 conversion_vals:
   sig_mean:
@@ -87,6 +95,10 @@ conversion_vals:
     - 1
 fdr_alpha : 0.05
 min_run_length: 1
+# The decoy threshold needs a SECOND control library, which the example dataset
+# does not contain -- it has one control and one treated sample. `called` therefore
+# falls back to the Benjamini-Hochberg decision here. The published analyses set
+# this to the second control replicate; see the README.
 calibration_control: null
 calibration_fdr: 0.01
 peak_separation: 2
