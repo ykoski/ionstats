@@ -54,15 +54,24 @@ def get_expected_values_for_sequence(seq, mean_dict, std_dict, kmer_len = 9):
 
 
 def get_expected_values_for_read(seq, exp_dict):
-    values = np.zeros(len(seq))
+    # The k-mer table covers ACGT only, so any k-mer overlapping an N in the reference
+    # has no expected value. Those positions become NaN rather than raising: the AEAD
+    # windows that touch them are then dropped by add_to_dict, which leaves the rest of
+    # the read intact. A single N in a reference used to abort the whole sample.
+    values = np.full(len(seq), np.nan)
     for i, m in enumerate(seq):
-        values[i] = exp_dict[m]
+        values[i] = exp_dict.get(m, np.nan)
     return values
 
 
 def add_to_dict(kmer_dict, kmer, value, dtype = np.float16):
     """Dynamically add values to a NumPy array stored in a dictionary."""
     if kmer is None:
+        return
+    # NaN reaches here only from an AEAD window that overlapped a k-mer missing from the
+    # expected value table. Dropping it keeps the stored distributions clean. The test is
+    # the cheap self-comparison rather than np.isfinite, since this runs once per value.
+    if value != value:
         return
     if kmer in kmer_dict:
         arr, length = kmer_dict[kmer]
@@ -175,11 +184,12 @@ def get_file_path(id, bpath):
                 return os.path.join(root, f)
             
 
-def write_out_sequences(seqs, filename):
+def write_out_sequences(seqs, filename, names = None):
     with open(filename, 'w') as ofile:
         for e, seq in enumerate(seqs):
             if "-" not in seq:
-                ofile.write(f">kmer:{e}\n")
+                name = f"kmer:{e}" if names is None else names[e]
+                ofile.write(f">{name}\n")
                 ofile.write(seq + "\n\n")
     return
 
@@ -194,12 +204,30 @@ def get_id_column(line_list, col, value):
     return id_index
 
 
+def overlay_config(base, new, prefix = ""):
+    """Write the values of new over base, recursing into nested sections."""
+    for key, val in new.items():
+        if isinstance(val, dict) and isinstance(base.get(key), dict):
+            overlay_config(base[key], val, f"{prefix}{key}.")
+        else:
+            base[key] = val
+
+
 def load_config(config_path = None, default_config_path = "default_config.yaml"):
+    # A custom config is layered on top of the default one, so that a config written
+    # before a new argument existed still runs, with the default filled in for it
     base_dir = pathlib.Path(__file__).resolve().parent.parent
-    default_config_path = os.path.join(base_dir, default_config_path)
-    pth = pathlib.Path(config_path or default_config_path)
-    with open(pth, 'r') as f:
-        return yaml.safe_load(f)
+    with open(os.path.join(base_dir, default_config_path), 'r') as f:
+        config = yaml.safe_load(f)
+    if config_path is None:
+        return config
+    with open(pathlib.Path(config_path), 'r') as f:
+        custom = yaml.safe_load(f) or {}
+    filled = sorted(set(config) - set(custom))
+    overlay_config(config, custom)
+    if filled:
+        print(f"[INFO] Arguments not set in {config_path}, using defaults: {', '.join(filled)}")
+    return config
     
 
 def infer_type(val):
@@ -221,3 +249,35 @@ def get_reference_kmers(ref_path, ref_name, k):
     ref_seq = reference.fetch(reference = ref_name)
     ref_kmers = get_kmers(ref_seq, k, of = False)
     return ref_kmers
+
+
+class RefKmerFetcher():
+    """Fetch the reference k-mer that was in the pore at a (contig, position) pair.
+
+    The position is the base that dominates the signal, which sits at index
+    h + sensing_offset of the k-mer rather than at its centre, so the fetched
+    window is shifted by -sensing_offset with respect to the position.
+
+    One contig sequence is cached at a time, which is enough when the positions
+    are iterated in sorted order, and avoids materialising the k-mers of every
+    contig of the reference.
+    """
+
+    def __init__(self, ref_path, k, sensing_offset = 0):
+        self.reference = pysam.FastaFile(str(ref_path))
+        self.k = k
+        self.h = k // 2
+        self.sensing_offset = sensing_offset
+        self.contig = None
+        self.sequence = None
+
+    def kmer_at(self, contig, pos):
+        if contig != self.contig:
+            self.sequence = self.reference.fetch(reference = contig)
+            self.contig = contig
+        seqlen = len(self.sequence)
+        start, end = pos - self.h - self.sensing_offset, pos + self.h - self.sensing_offset + 1
+        # Pad the k-mers at the contig edges, as get_kmers does
+        left = "-" * max(0, -start)
+        right = "-" * max(0, end - seqlen)
+        return left + self.sequence[max(0, start):min(end, seqlen)] + right

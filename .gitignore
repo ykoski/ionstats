@@ -1,1 +1,14 @@
 src/__pycache__/
+__pycache__/
+*.pyc
+
+# Scratch backups kept while editing; the committed history is the record
+*.bak*
+
+# Run and build logs
+*.log
+
+# Example dataset: 200+ MB of bam/pod5, over GitHub's per-file limit.
+# Distribute as a release asset or via Zenodo, not in the repository.
+example/
+*.tar.gz
