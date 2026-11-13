@@ -23,35 +23,29 @@ You can install IonStats by first cloning into the GitHub repository, then setti
 `uncalled4` is installed after activating the environment, not from
 `conda_env.yaml`, and the order matters. It is published only as a source
 package -- no wheels for any platform and no conda package -- so pip compiles
-its C++ extension during installation. `conda_env.yaml` therefore includes
-`cxx-compiler`, which puts a toolchain inside the environment: `g++` on Linux,
-`clang++` with the macOS SDK on macOS. That compiler is only on `PATH` once the
-environment is active, which is why `uncalled4` cannot be listed under `pip:`
-in the environment file -- `conda env create` runs its pip step as
-`<env>/bin/python -m pip`, with `<env>/bin` absent from `PATH`, so the build
-looks for a bare `g++`, misses the compiler it has just installed, and fails on
-any machine without a system compiler.
+its C++ extension during installation.
 
 You can verify that the installation was successful by running:
 
     ionstats --help
 
-### Notes on installing uncalled4
+### uncalled4 is Linux-only, and IonStats only needs it for `preprocess`
 
-On macOS the build also needs Apple's command line tools, which provide the SDK
-holding the C++ standard library headers. Without them it stops at
-`fatal error: 'iostream' file not found`:
+`uncalled4` states that it requires GCC and is tested only on Linux, and we have
+not been able to build it on macOS.
 
-    xcode-select --install          # or: sudo xcode-select --reset
-    export SDKROOT=$(xcrun --show-sdk-path)
+**This only blocks the `preprocess` step.** IonStats runs `uncalled4` as an
+external command and never imports it, so everything else works without it:
+
+* remove `preprocess` from `analyses` in your config, and
+* start from BAM files that already carry uncalled4's `uc` and `ud` tags.
+
+Run `preprocess` on a Linux machine, or in a container, and copy the resulting
+BAMs over. `collect`, `stats`, `test`, `motif_discovery` and `interruptions` are
+pure Python and run anywhere.
 
 On a shared system, set `export PYTHONNOUSERSITE=1` before installing, so that
 packages in `~/.local` cannot shadow the ones in the environment.
-
-If no compiler can be made to work, the rest of the pipeline still runs without
-`uncalled4`: IonStats calls it as an external command and never imports it, and
-only the `preprocess` step needs it. Remove `preprocess` from `analyses` and
-start from BAM files that already carry uncalled4's `uc` and `ud` tags.
 
 ## Running IonStats
 
